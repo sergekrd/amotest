@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контакты</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Контакты</h1>
+
+    <!-- Строка для ввода и кнопка "Найти" -->
+    <div>
+        <input type="text" id="searchPhoneInput" placeholder="Телефон">
+        <input type="text" id="searchEmailInput" placeholder="Email">
+        <button onclick="searchContacts()">Найти</button>
+    </div>
+
+
+    <!-- Строка для статусов и сообщений -->
+    <div>&nbsp;</div>
+    <div id="statusRow">
+        <span id="statusMessage"></span>
+    </div>
+    <div>&nbsp;</div>
+
+    <!-- Таблица контактов -->
+    <table id="contactsTable">
+        <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Фамилия</th>
+                <th>Телефон</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" id="nameInput"></td>
+                <td><input type="text" id="lastNameInput"></td>
+                <td><input type="text" id="phoneInput"></td>
+                <td><input type="text" id="emailInput"></td>
+                <td><button id="saveButton">Сохранить</button></td>
+                <!-- Вызывает функцию saveContact при нажатии -->
+
+            </tr>
+        </tbody>
+    </table>
+    <button id="dealButton" disabled>Создать сделку</button>
+
+    <script>
+        const saveButton = document.querySelector('#saveButton');
+        async function searchContacts() {
+            try {
+                const searchPhoneInput = document.getElementById('searchPhoneInput');
+                const searchEmailInput = document.getElementById('searchEmailInput');
+                const phone = searchPhoneInput.value;
+                const email = searchEmailInput.value;
+
+                if (!phone && !email) {
+                    alert('Введите хотя бы одно значение (телефон или email) для поиска.');
+                    return;
+                }
+
+                let apiUrl = '/myapi/contacts/getcontacts?';
+                apiUrl += `phone=${phone ?? null}&`;
+                apiUrl += `email=${email ?? null}&`;
+
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при запросе контактов');
+                    setStatusMessage('Ошибка при запросе контактов', 'error');
+                } else if (response.status == 204) {
+                    setStatusMessage('Контакт не найден, заполните все поля и сохраните его', '');
+                    fillInputs([{ phone }, { email }])
+                    if (localStorage.getItem('contactId')) {
+                        localStorage.removeItem('contactId');
+                    }
+                    const dealButton = document.getElementById('dealButton');
+                    dealButton.disabled = true
+
+                } else {
+                    setStatusMessage('Контакт найден');
+                    const data = await response.json();
+                    localStorage.setItem('contactId', data.id);
+                    const dealButton = document.getElementById('dealButton');
+                    dealButton.disabled = false
+                    const name = data.first_name
+                    const lastName = data.last_name
+                    fillInputs([{ name }, { lastName }])
+                    data.custom_fields_values.forEach(element => {
+                        if (element.field_code == "PHONE") {
+                            const phone = element.values[0].value;
+                            fillInputs([{ phone }])
+                        }
+                    });
+
+
+                    data.custom_fields_values.forEach(element => {
+                        if (element.field_code == "EMAIL") {
+                            const email = element.values[0].value;
+                            fillInputs([{ email }])
+                        }
+                    });
+                }
+            } catch (error) {
+                setStatusMessage('Ошибка в поиске контакта', 'error')
+            }
+        }
+
+        saveButton.onclick = async () => {
+            try {
+                const { name, lastName, phone, email } = getDataFromInputs()
+
+                if (!name || !lastName || !phone || !email) {
+                    alert('Все поля должны быть заполнены');
+                    return;
+                }
+                if (localStorage.getItem('contactId')) {
+                    const id = localStorage.getItem('contactId')
+                }
+                const update = await fetch('/myapi/contacts/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, lastName, phone, email }),
+                })
+                const data=await update.json()
+                if (!update.ok) {
+                    throw new Error('Ошибка при сохранении данных');
+                }
+                else {
+                    setStatusMessage(data.message, 'success')
+                };
+
+
+
+            } catch (error) {
+                setStatusMessage('Ошибка при обновлении.сохранении пользователя', 'error')
+            }
+        }
+
+
+
+        async function addContact() {
+            try {
+                const { name, lastName, phone, email } = getDataFromInputs()
+
+                if (!name || !lastName || !phone || !email) {
+                    alert('Заполните все поля для добавления контакта.');
+                    return;
+                }
+                const body = { name, lastName, phone, email }
+                console.log(body)
+                const response = await fetch('/myapi/contacts/addcontact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(body),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при добавлении контакта');
+                }
+
+                setStatusMessage('Контакт добавлен', 'success')
+                const dealButton = document.getElementById('dealButton');
+                dealButton.disabled = false
+            } catch (error) {
+                console.error('Произошла ошибка при добавлении контакта:', error);
+                setStatusMessage('Произошла ошибка при добавлении контакта', 'error')
+            }
+        }
+        function setStatusMessage(message, status) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = status;
+        }
+
+
+
+        const dealButton = document.getElementById('dealButton');
+        dealButton.addEventListener('click', async () => {
+            const contactId = localStorage.getItem('contactId');
+            if (contactId) {
+                try {
+                    const data = { contactId };
+
+                    // Отправляем POST-запрос на сервер
+                    const response = await fetch('/myapi/createDeal', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        // Успешно создана сделка
+                        alert('Сделка успешно создана!');
+                    } else {
+                        // Обработка ошибок при создании сделки
+                        alert('Произошла ошибка при создании сделки.');
+                    }
+                } catch (error) {
+                    console.error('Произошла ошибка:', error);
+                }
+            } else {
+                alert('Не найден contactId в localStorage. Сначала выберите контакт.');
+            }
+        });
+
+        function fillInput(obj) {
+            const key = Object.keys(obj)[0]
+            const value = obj[key]
+            switch (Object.keys(obj)[0]) {
+                case 'phone':
+                    const phoneInput = document.querySelector('#phoneInput');
+                    phoneInput.value = value
+                    break;
+                case 'name':
+                    const nameInput = document.querySelector('#nameInput');
+                    nameInput.value = value
+                    break;
+                case 'lastName':
+                    const lastNameInput = document.querySelector('#lastNameInput');
+                    lastNameInput.value = value
+                    break;
+                case 'email':
+                    const emailInput = document.querySelector('#emailInput');
+                    emailInput.value = value
+                    break;
+                default:
+                    break;
+            }
+        }
+        function fillInputs(array) {
+            array.forEach(element => fillInput(element))
+        }
+        function getDataFromInputs() {
+            const nameInput = document.getElementById('nameInput');
+            const lastNameInput = document.getElementById('lastNameInput');
+            const phoneInput = document.getElementById('phoneInput');
+            const emailInput = document.getElementById('emailInput');
+            const name = nameInput.value;
+            const lastName = lastNameInput.value;
+            const phone = phoneInput.value;
+            const email = emailInput.value;
+            return { name, lastName, phone, email }
+        }
+
+    </script>
+</body>
+
+</html>

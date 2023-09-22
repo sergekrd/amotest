@@ -1,0 +1,21 @@
+{
+  "name": "amocrmtest",
+  "version": "0.0.1",
+  "description": "Test for backend junior",
+  "main": "app.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "ammosrm",
+    "test"
+  ],
+  "author": "serge",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "pg-promise": "^11.5.4"
+  },
+"type":"module"
+}
