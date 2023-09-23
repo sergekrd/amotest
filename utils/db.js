@@ -1,21 +1,12 @@
 import pgp from 'pg-promise';
+import { dbConnectData } from '../config.js';
 
 const initOptions = {};
 
 const pgpInstance = pgp(initOptions);
 
 
-const db = pgpInstance({
-  user: 'test',
-  password: 'testamoamo',
-  //host: 'localhost',
-  host: '194.87.68.120',
-  port: 5432,
-  database: 'amocrm'
-});
-
-// Определение таблицы data
-
+const db = pgpInstance(dbConnectData);
 
 const createDataTable = async () => {
     try {
@@ -66,10 +57,7 @@ async function createTables() {
     }
 }
 
-// Вызываем функцию для создания таблиц
 
-
-// Функция для вставки данных
 const insertData = async (client_id, client_secret, grant_type, code, redirect_uri,usernmae) => {
     try {
         const newData = await db.one(`
@@ -92,12 +80,9 @@ const updateCode = async (client_id, code) => {
         SET code = $1
         WHERE client_id = $2;
       `, [code, client_id]);
-  
-      // Если операция прошла успешно, возвращаем сообщение об успехе.
       return { success: true, message: 'Код успешно добавлен в таблицу data.' };
     } catch (error) {
       console.error('Ошибка при добавлении кода:', error);
-      // Если произошла ошибка, возвращаем сообщение об ошибке.
       throw error;
   };
 }
@@ -109,12 +94,9 @@ const updateCode = async (client_id, code) => {
         SET access_token = $2, refresh_token = $3,expires_in = $4
         WHERE username = $1;
       `, [username, access_token,refresh_token,expires_in]);
-  
-      // Если операция прошла успешно, возвращаем сообщение об успехе.
-      return { success: true, message: 'refresh_token успешно обновлен в таблице auth.' };
+        return { success: true, message: 'refresh_token успешно обновлен в таблице auth.' };
     } catch (error) {
       console.error('Ошибка при обновлении:', error);
-      // Если произошла ошибка, возвращаем сообщение об ошибке.
       throw error;
     }
   };
@@ -125,7 +107,6 @@ const updateCode = async (client_id, code) => {
         'SELECT * FROM data WHERE client_id = $1',
         client_id
       );
-  
       if (result) {
         return result;
       } else {
