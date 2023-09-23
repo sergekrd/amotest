@@ -8,7 +8,7 @@ import amoRoutes from './routes/amoroutes.js';
 import {contactsRouter,getContactQuery} from './routes/contacts.js'
 import checkAuthTokenValidity from './utils/auth.js'
 import { getAccount,getLeads} from './utils/helpers.js'
-import httpsOptions from './config.js'
+import {httpsOptions} from './config.js'
 
 const app = express();
 
@@ -18,6 +18,8 @@ app.use('/myapi/contacts', contactsRouter);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 db.createTables();
+
+
 
 const server = https.createServer(httpsOptions, app); 
 
