@@ -92,9 +92,7 @@ const patch = async (access_token, endpoint, body,) => {
       }
   
     }
-    catch (error) {
-  
-  
+    catch (error) {  
       console.error('Ошибка:', error.message);
       throw new Error('Ошибка запроса');
     }
