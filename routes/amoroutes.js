@@ -40,7 +40,7 @@ amoRouter.get('/setauthkey', async (req, res) => {
     await db.insertAuth(token_type, expire, access_token, refresh_token, data.username)
 
 
-    res.redirect('/') //send(html)
+    res.redirect('/') 
   } catch (error) {
 
     console.error('Ошибка:', error.message);

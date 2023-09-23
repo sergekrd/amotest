@@ -2,7 +2,7 @@ import https from 'https';
 import fs from 'fs';
 import express from 'express';
 import db from './utils/db.js';
-import {post,patch,get} from './utils/requests.js';
+import {post} from './utils/requests.js';
 import bodyParser from 'body-parser';
 import amoRoutes from './routes/amoroutes.js'; 
 import {contactsRouter,getContactQuery} from './routes/contacts.js'

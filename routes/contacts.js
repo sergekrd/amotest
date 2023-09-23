@@ -132,7 +132,6 @@ if (typeof array=='string'){
                 return contact
             }
         }
-
     }
     catch (error) {
         console.error('Ошибка:', error.message);
